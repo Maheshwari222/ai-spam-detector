@@ -1,21 +1,33 @@
 
+# =========================
+# app.py
+# Advanced AI Spam Detector
+# =========================
+
 from flask import Flask, render_template, request
 
 import pandas as pd
 
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
+# NLP
+from sklearn.feature_extraction.text import TfidfVectorizer
 
+# ML Model
+from sklearn.linear_model import LogisticRegression
+
+# Accuracy
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
+# Charts
 import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 
+# Database
 import sqlite3
 
+# Time
 from datetime import datetime
 
 
@@ -27,7 +39,7 @@ app = Flask(__name__)
 
 
 # =========================
-# Database
+# Database Connection
 # =========================
 
 conn = sqlite3.connect(
@@ -64,22 +76,23 @@ conn.commit()
 
 data = pd.read_csv("spam.csv")
 
+# Input and Output
 X = data["text"]
 
 y = data["label"]
 
 
 # =========================
-# Text Vectorization
+# TF-IDF Vectorization
 # =========================
 
-vectorizer = CountVectorizer()
+vectorizer = TfidfVectorizer()
 
 X_vector = vectorizer.fit_transform(X)
 
 
 # =========================
-# Train Test Split
+# Split Dataset
 # =========================
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -91,16 +104,16 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 # =========================
-# Train Model
+# Train Logistic Regression
 # =========================
 
-model = MultinomialNB()
+model = LogisticRegression()
 
 model.fit(X_train, y_train)
 
 
 # =========================
-# Accuracy
+# Model Accuracy
 # =========================
 
 predictions = model.predict(X_test)
@@ -149,6 +162,7 @@ plt.close()
 @app.route("/")
 def home():
 
+    # Fetch history
     cursor.execute("""
 
     SELECT * FROM predictions
@@ -172,18 +186,18 @@ def home():
 @app.route("/predict", methods=["POST"])
 def predict():
 
-    # Get message
+    # Get user message
     message = request.form["message"]
 
     data_input = [message]
 
-    # Convert to vector
+    # Convert text into vector
     vector = vectorizer.transform(data_input)
 
     # Prediction
     prediction = model.predict(vector)
 
-    # Confidence
+    # Probability
     probability = model.predict_proba(vector)
 
     confidence = max(probability[0]) * 100
@@ -193,14 +207,16 @@ def predict():
         "%Y-%m-%d %H:%M:%S"
     )
 
-    # Save to database
+    # Save to Database
     cursor.execute("""
 
     INSERT INTO predictions (
+
         message,
         prediction,
         confidence,
         time
+
     )
 
     VALUES (?, ?, ?, ?)
@@ -216,7 +232,7 @@ def predict():
 
     conn.commit()
 
-    # Fetch history
+    # Fetch Updated History
     cursor.execute("""
 
     SELECT * FROM predictions
@@ -241,9 +257,10 @@ def predict():
 
 
 # =========================
-# Run App
+# Run Flask App
 # =========================
 
 if __name__ == "__main__":
 
     app.run(debug=True)
+

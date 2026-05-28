@@ -6,6 +6,8 @@
 
     <title>AI Spam Detector</title>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <style>
 
         *{
@@ -31,14 +33,15 @@
                 #764ba2
             );
 
-            padding:30px;
+            padding:20px;
         }
 
         .container{
 
-            width:600px;
+            width:100%;
+            max-width:650px;
 
-            padding:40px;
+            padding:35px;
 
             background:rgba(255,255,255,0.15);
 
@@ -55,18 +58,16 @@
 
         h1{
 
-            margin-bottom:10px;
+            font-size:40px;
 
-            font-size:35px;
+            margin-bottom:10px;
         }
 
         .accuracy{
 
-            margin-bottom:25px;
-
-            color:#eee;
-
             font-size:20px;
+
+            margin-bottom:25px;
         }
 
         input{
@@ -100,7 +101,7 @@
 
             color:white;
 
-            font-size:16px;
+            font-size:17px;
 
             cursor:pointer;
 
@@ -120,7 +121,7 @@
 
             color:#ff4d4d;
 
-            font-size:26px;
+            font-size:28px;
 
             font-weight:bold;
         }
@@ -131,7 +132,7 @@
 
             color:#00ff99;
 
-            font-size:26px;
+            font-size:28px;
 
             font-weight:bold;
         }
@@ -141,18 +142,17 @@
             margin-top:10px;
 
             font-size:20px;
-
-            color:#fff;
         }
 
         .chart{
 
-            margin-top:25px;
+            margin-top:30px;
         }
 
         .chart img{
 
-            width:300px;
+            width:100%;
+            max-width:320px;
 
             border-radius:15px;
 
@@ -163,7 +163,7 @@
 
         .history{
 
-            margin-top:30px;
+            margin-top:35px;
 
             background:white;
 
@@ -173,7 +173,7 @@
 
             border-radius:15px;
 
-            max-height:250px;
+            max-height:300px;
 
             overflow:auto;
 
@@ -189,7 +189,28 @@
 
         .history-item{
 
-            margin-bottom:15px;
+            margin-bottom:20px;
+        }
+
+        hr{
+
+            margin-top:10px;
+        }
+
+        @media(max-width:600px){
+
+            h1{
+                font-size:30px;
+            }
+
+            .container{
+                padding:20px;
+            }
+
+            button{
+                width:100%;
+            }
+
         }
 
     </style>
@@ -219,7 +240,9 @@
             >
 
             <button type="submit">
+
                 Analyze Message
+
             </button>
 
         </form>
@@ -264,7 +287,9 @@
         <div class="history">
 
             <h2>
+
                 Prediction History
+
             </h2>
 
             {% for item in history %}
@@ -274,7 +299,7 @@
                     <b>Message:</b>
                     {{ item[1] }}
 
-                    <br>
+                    <br><br>
 
                     <b>Prediction:</b>
                     {{ item[2] }}
@@ -284,7 +309,7 @@
                     <b>Confidence:</b>
                     {{ item[3] }}%
 
-                    <br>
+                    <br><br>
 
                     <b>Time:</b>
                     {{ item[4] }}
