@@ -2,11 +2,15 @@
 # =========================
 # app.py
 # Full AI Spam Detector
-# With Login System
+# With Login + Security
 # =========================
 
-from flask import Flask, render_template, request
-from flask import session, redirect, url_for
+from flask import Flask
+from flask import render_template
+from flask import request
+from flask import session
+from flask import redirect
+from flask import url_for
 
 import pandas as pd
 
@@ -31,6 +35,10 @@ import sqlite3
 
 # Time
 from datetime import datetime
+
+# Password Security
+from werkzeug.security import generate_password_hash
+from werkzeug.security import check_password_hash
 
 
 # =========================
@@ -207,7 +215,8 @@ def home():
     return render_template(
         "index.html",
         accuracy=round(accuracy * 100, 2),
-        history=history
+        history=history,
+        username=session["user"]
     )
 
 
@@ -224,6 +233,11 @@ def register():
 
         password = request.form["password"]
 
+        # Encrypt Password
+        hashed_password = generate_password_hash(
+            password
+        )
+
         cursor.execute("""
 
         INSERT INTO users (
@@ -236,7 +250,7 @@ def register():
         """, (
 
             username,
-            password
+            hashed_password
 
         ))
 
@@ -263,18 +277,20 @@ def login():
         cursor.execute("""
 
         SELECT * FROM users
-        WHERE username=? AND password=?
+        WHERE username=?
 
         """, (
 
             username,
-            password
 
         ))
 
         user = cursor.fetchone()
 
-        if user:
+        if user and check_password_hash(
+            user[2],
+            password
+        ):
 
             session["user"] = username
 
@@ -306,28 +322,28 @@ def predict():
 
         return redirect(url_for("login"))
 
-    # Get message
+    # User Message
     message = request.form["message"]
 
     data_input = [message]
 
-    # Convert to vector
+    # Convert Text
     vector = vectorizer.transform(data_input)
 
     # Prediction
     prediction = model.predict(vector)
 
-    # Probability
+    # Confidence
     probability = model.predict_proba(vector)
 
     confidence = max(probability[0]) * 100
 
-    # Current time
+    # Current Time
     current_time = datetime.now().strftime(
         "%Y-%m-%d %H:%M:%S"
     )
 
-    # Save to database
+    # Save Prediction
     cursor.execute("""
 
     INSERT INTO predictions (
@@ -352,7 +368,7 @@ def predict():
 
     conn.commit()
 
-    # Fetch history
+    # Fetch History
     cursor.execute("""
 
     SELECT * FROM predictions
@@ -372,7 +388,9 @@ def predict():
 
         accuracy=round(accuracy * 100, 2),
 
-        history=history
+        history=history,
+
+        username=session["user"]
     )
 
 
