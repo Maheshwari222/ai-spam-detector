@@ -1,10 +1,12 @@
 
 # =========================
 # app.py
-# Advanced AI Spam Detector
+# Full AI Spam Detector
+# With Login System
 # =========================
 
 from flask import Flask, render_template, request
+from flask import session, redirect, url_for
 
 import pandas as pd
 
@@ -37,6 +39,8 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+app.secret_key = "secret123"
+
 
 # =========================
 # Database Connection
@@ -48,6 +52,11 @@ conn = sqlite3.connect(
 )
 
 cursor = conn.cursor()
+
+
+# =========================
+# Prediction Table
+# =========================
 
 cursor.execute("""
 
@@ -71,19 +80,39 @@ conn.commit()
 
 
 # =========================
+# Users Table
+# =========================
+
+cursor.execute("""
+
+CREATE TABLE IF NOT EXISTS users (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    username TEXT,
+
+    password TEXT
+
+)
+
+""")
+
+conn.commit()
+
+
+# =========================
 # Load Dataset
 # =========================
 
 data = pd.read_csv("spam.csv")
 
-# Input and Output
 X = data["text"]
 
 y = data["label"]
 
 
 # =========================
-# TF-IDF Vectorization
+# TF-IDF Vectorizer
 # =========================
 
 vectorizer = TfidfVectorizer()
@@ -104,7 +133,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 
 # =========================
-# Train Logistic Regression
+# Train Model
 # =========================
 
 model = LogisticRegression()
@@ -113,7 +142,7 @@ model.fit(X_train, y_train)
 
 
 # =========================
-# Model Accuracy
+# Accuracy
 # =========================
 
 predictions = model.predict(X_test)
@@ -162,7 +191,10 @@ plt.close()
 @app.route("/")
 def home():
 
-    # Fetch history
+    if "user" not in session:
+
+        return redirect(url_for("login"))
+
     cursor.execute("""
 
     SELECT * FROM predictions
@@ -180,18 +212,106 @@ def home():
 
 
 # =========================
+# Register Route
+# =========================
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+
+    if request.method == "POST":
+
+        username = request.form["username"]
+
+        password = request.form["password"]
+
+        cursor.execute("""
+
+        INSERT INTO users (
+            username,
+            password
+        )
+
+        VALUES (?, ?)
+
+        """, (
+
+            username,
+            password
+
+        ))
+
+        conn.commit()
+
+        return redirect(url_for("login"))
+
+    return render_template("register.html")
+
+
+# =========================
+# Login Route
+# =========================
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+
+    if request.method == "POST":
+
+        username = request.form["username"]
+
+        password = request.form["password"]
+
+        cursor.execute("""
+
+        SELECT * FROM users
+        WHERE username=? AND password=?
+
+        """, (
+
+            username,
+            password
+
+        ))
+
+        user = cursor.fetchone()
+
+        if user:
+
+            session["user"] = username
+
+            return redirect(url_for("home"))
+
+    return render_template("login.html")
+
+
+# =========================
+# Logout Route
+# =========================
+
+@app.route("/logout")
+def logout():
+
+    session.pop("user", None)
+
+    return redirect(url_for("login"))
+
+
+# =========================
 # Prediction Route
 # =========================
 
 @app.route("/predict", methods=["POST"])
 def predict():
 
-    # Get user message
+    if "user" not in session:
+
+        return redirect(url_for("login"))
+
+    # Get message
     message = request.form["message"]
 
     data_input = [message]
 
-    # Convert text into vector
+    # Convert to vector
     vector = vectorizer.transform(data_input)
 
     # Prediction
@@ -202,12 +322,12 @@ def predict():
 
     confidence = max(probability[0]) * 100
 
-    # Current Time
+    # Current time
     current_time = datetime.now().strftime(
         "%Y-%m-%d %H:%M:%S"
     )
 
-    # Save to Database
+    # Save to database
     cursor.execute("""
 
     INSERT INTO predictions (
@@ -232,7 +352,7 @@ def predict():
 
     conn.commit()
 
-    # Fetch Updated History
+    # Fetch history
     cursor.execute("""
 
     SELECT * FROM predictions
