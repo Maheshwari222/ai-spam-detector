@@ -39,7 +39,7 @@
         .container{
 
             width:100%;
-            max-width:650px;
+            max-width:700px;
 
             padding:35px;
 
@@ -63,11 +63,16 @@
             margin-bottom:10px;
         }
 
+        h3{
+
+            margin-top:10px;
+        }
+
         .accuracy{
 
             font-size:20px;
 
-            margin-bottom:25px;
+            margin-bottom:20px;
         }
 
         input{
@@ -115,6 +120,13 @@
             background:#0072ff;
         }
 
+        .logout-btn{
+
+            background:red;
+
+            margin-top:10px;
+        }
+
         .spam{
 
             margin-top:25px;
@@ -139,7 +151,7 @@
 
         .confidence{
 
-            margin-top:10px;
+            margin-top:15px;
 
             font-size:20px;
         }
@@ -222,27 +234,23 @@
     <div class="container">
 
         <h1>🤖 AI Spam Detector</h1>
+
         <h3>
 
-    Welcome,
-    {{ username }}
+            Welcome,
+            {{ username }}
 
-</h3>
+        </h3>
 
-<a href="/logout">
+        <a href="/logout">
 
-    <button
-        style="
-            background:red;
-            margin-top:10px;
-        "
-    >
+            <button class="logout-btn">
 
-        Logout
+                Logout
 
-    </button>
+            </button>
 
-</a>
+        </a>
 
         <p class="accuracy">
 
@@ -270,15 +278,85 @@
 
         {% if prediction %}
 
-            {% if prediction == "spam" %}
+            
+{% if prediction %}
 
-                <div class="spam">
+    <div
+        style="
+            margin-top:30px;
+            background:white;
+            color:black;
+            padding:25px;
+            border-radius:20px;
+            box-shadow:0 4px 15px rgba(0,0,0,0.2);
+        "
+    >
 
-                    🚨 SPAM DETECTED
+        {% if prediction == "spam" %}
 
-                </div>
+            <h2 style="color:red;">
 
-            {% else %}
+                🚨 Spam Message Detected
+
+            </h2>
+
+        {% else %}
+
+            <h2 style="color:green;">
+
+                ✅ Safe Email Message
+
+            </h2>
+
+        {% endif %}
+
+        <p
+            style="
+                margin-top:15px;
+                font-size:18px;
+            "
+        >
+
+            AI Confidence:
+            <b>{{ confidence }}%</b>
+
+        </p>
+
+        <div
+            style="
+                width:100%;
+                background:#ddd;
+                border-radius:10px;
+                margin-top:15px;
+                overflow:hidden;
+            "
+        >
+
+            <div
+                style="
+                    width:{{ confidence }}%;
+                    background:
+                    {% if prediction == 'spam' %}
+                        red
+                    {% else %}
+                        green
+                    {% endif %};
+                    color:white;
+                    padding:10px;
+                "
+            >
+
+                {{ confidence }}%
+
+            </div>
+
+        </div>
+
+    </div>
+
+{% endif %}
+
+
 
                 <div class="ham">
 
@@ -292,6 +370,36 @@
 
                 Confidence:
                 {{ confidence }}%
+
+            </div>
+
+            <div
+                style="
+                    width:100%;
+                    background:#ddd;
+                    border-radius:10px;
+                    margin-top:10px;
+                    overflow:hidden;
+                "
+            >
+
+                <div
+                    style="
+                        width:{{ confidence }}%;
+                        background:
+                        {% if prediction == 'spam' %}
+                            red
+                        {% else %}
+                            green
+                        {% endif %};
+                        color:white;
+                        padding:8px;
+                    "
+                >
+
+                    {{ confidence }}%
+
+                </div>
 
             </div>
 
